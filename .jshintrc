@@ -1,0 +1,14 @@
+{
+  "node": true,
+  "esnext": true,
+  "curly": false,
+  "smarttabs": true,
+  "indent": 2,
+  "quotmark": "single",
+  "expr": "true",
+  "globals": {
+    "po": true,
+    "fis": true,
+    "fis3": true
+  }
+}
