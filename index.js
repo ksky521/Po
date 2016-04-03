@@ -3,6 +3,7 @@ var path = require('path');
 fis.require.prefixes.unshift('po');
 fis.cli.name = 'po';
 fis.cli.info = require('./package.json');
+fis.set('server.type', 'smarty');
 
 fis.cli.version = require('./version.js');
 var sets = {

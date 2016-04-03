@@ -13,6 +13,7 @@
     "fis3": "3.3.21",
     "fis-parser-es6": "0.0.1",
     "fis-parser-sass": "0.3.16",
+    "fis3-server-smarty": "0.0.4",
     "fis-optimizer-uglify-js": "0.1.14",
     "fis-optimizer-clean-css": "0.0.12",
     "fis-optimizer-png-compressor": "0.1.5",
