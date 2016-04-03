@@ -163,7 +163,6 @@ fis.media('prod').match('/test/**', {
 // default media is `dev`，
 fis.media('dev').match('*', {
   useHash: false,
-
   optimizer: null
 });
 
