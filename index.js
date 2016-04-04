@@ -4,21 +4,27 @@ fis.require.prefixes.unshift('po');
 fis.cli.name = 'po';
 fis.cli.info = require('./package.json');
 fis.set('server.type', 'smarty');
+var cwd = process.cwd();
+try {
+  var sets = require(path.join(cwd, 'config.json'));
+} catch (e) {
+  var sets = {
+    'namespace': '',
+    'static': 'static',
+    'template': 'template',
+    'smarty': {
+      'left_delimiter': '{%',
+      'right_delimiter': '%}'
+    }
+  };
+}
 
 fis.cli.version = require('./version.js');
-var sets = {
-  'namespace': '',
-  'static': 'static',
-  'template': 'template',
-  'smarty': {
-    'left_delimiter': '{%',
-    'right_delimiter': '%}'
-  }
-};
+
 
 var matchRules = {
   '*': {
-    release: '/${static}/${namespace}/$0'
+    release: '/${namespace}/$0'
   },
 
   // 文件扩展名
@@ -46,7 +52,7 @@ var matchRules = {
       isPage: true
     },
     useMap: true,
-    release: '/${template}/${namespace}/$1'
+    release: '/${namespace}/$1'
   },
   '*.{tpl,js,ejs,scss,css}': {
     useSameNameRequire: true
@@ -55,17 +61,21 @@ var matchRules = {
 
   // widget
   '/(widget/**).tpl': {
-    url: '${namespace}/$1',
+    release: '${namespace}/$1',
     useMap: true
   },
   '/widget/{*.{js,scss,less,css},**/*.{js,scss,less,css}}': {
-    isMod: true
+    isMod: true,
+    release: '${namespace}/widget/$1'
   },
   '/{plugin/**.*,smarty.conf,domain.conf,**.php}': {
     release: '$0'
   },
 
   //mods
+  '/mods/**': {
+    release: '/${static}/$0'
+  },
   '/mods/**.{js,scss,css}': {
     isMod: true
   },
@@ -75,11 +85,11 @@ var matchRules = {
     parser: require('./plugins/parser/ejs')
   },
   '/mods/(**).ejs': {
-    release: '/${static}/${namespace}/mods/$1-t'
+    release: '/${static}/mods/$1-t'
   },
   // static
   '/static/(**)': {
-    release: '/${static}/${namespace}/$1'
+    release: '/${static}/$1'
   },
   'static/**.{js,scss,css}': {
     isMod: true
@@ -87,15 +97,7 @@ var matchRules = {
   '/static/jslib/**': {
     isMod: false
   },
-  // test & config
-  '/test/**': {
-    useMap: false,
-    release: '/$1/${namespace}/$2'
-  },
-  '/config/**': {
-    useMap: false,
-    release: '/$1/${namespace}/$2'
-  },
+
   '${namespace}-map.json': {
     release: '/config/$0'
   },
@@ -117,12 +119,39 @@ fis.set('project.ignore', [
   'output/**',
   'node_modules/**',
   '.git/**',
-  '.svn/**'
+  '.svn/**',
+  '*.md',
+  'LICENSE',
+  'plugin/{*.md,test/**}'
 ]);
+
+
+fis.util.map(['domain'], function (i, v) {
+  if (sets[v]) {
+    fis.util.map(sets[v], function (s, rule) {
+      fis.match(s, {
+        domain: rule
+      })
+    })
+    delete sets[v];
+  }
+});
+
+if (sets.deploy) {
+  fis.util.map(sets.deploy, function (s, r) {
+    fis.match(s, {
+      deploy: fis.plugin('http-push', r)
+    })
+  });
+  delete sets.deploy;
+}
 
 fis.util.map(sets, function (key, value) {
   fis.set(key, value);
 });
+
+
+
 fis.util.map(matchRules, function (selector, rules) {
   fis.match(selector, rules);
 });
@@ -130,41 +159,57 @@ fis.util.map(matchRules, function (selector, rules) {
 //正则match
 fis
   .match(/\/_(.*)\.(js|css|scss|less)$/, {
-    release: false
+    release: false,
+    useMap: false
   })
   .match(/\/_(.*)\.ejs/, {
     parser: fis.plugin('ejs'),
     isMod: false,
+    useMap: false,
     release: false
+  })
+  .match(/^\/(test|config)\/(.*)/, {
+    useMap: false,
+    release: '/$1/${namespace}/$2'
   })
 
 
 // 所有js, css 加 hash
-fis.media('prod').match('/test/**', {
-  release: false
-}).match('*.sh', {
-  release: false
-}).match('*.js', {
-  optimizer: fis.plugin('uglify-js')
-}).match('*.{css,less,scss}', {
-  optimizer: fis.plugin('clean-css')
-}).match('*.png', {
-  optimizer: fis.plugin('png-compressor')
-}).match('*.{js,css,sass,scss,ejs,less}', {
-  useHash: true
-}).match('::image', {
-  useHash: true
-}).match('*.{tpl,js,css,html,htm}', {
-  parser: fis.plugin('jdists', {
-    remove: 'debug,test'
+fis
+  .media('prod')
+  .match('*.sh', {
+    release: false
   })
-})
+  .match('*.js', {
+    optimizer: fis.plugin('uglify-js')
+  })
+  .match('*.{css,less,scss}', {
+    optimizer: fis.plugin('clean-css')
+  })
+  .match('*.png', {
+    optimizer: fis.plugin('png-compressor')
+  })
+  .match('*.{js,css,sass,scss,ejs,less}', {
+    useHash: true
+  })
+  .match('::image', {
+    useHash: true
+  })
+  .match('*.{tpl,js,css,html,htm}', {
+    parser: fis.plugin('jdists', {
+      remove: 'debug,test'
+    })
+  })
+  .match('/test/**', {
+    release: false
+  })
 
 // default media is `dev`，
-fis.media('dev').match('*', {
-  useHash: false,
-  optimizer: null
-});
+fis.media('dev')
+  .match('*', {
+    useHash: false,
+    optimizer: null
+  });
 
 
 // 模块化支持
