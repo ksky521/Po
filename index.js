@@ -5,19 +5,24 @@ fis.cli.name = 'po';
 fis.cli.info = require('./package.json');
 fis.set('server.type', 'smarty');
 var cwd = process.cwd();
+var sets;
+var defaultSets = sets = {
+  'namespace': '',
+  'static': 'static',
+  'template': 'template',
+  'smarty': {
+    'left_delimiter': '{%',
+    'right_delimiter': '%}'
+  }
+};
 try {
-  var sets = require(path.join(cwd, 'config.json'));
-} catch (e) {
-  var sets = {
-    'namespace': '',
-    'static': 'static',
-    'template': 'template',
-    'smarty': {
-      'left_delimiter': '{%',
-      'right_delimiter': '%}'
+  sets = require(path.join(cwd, 'config.json'));
+  fis.util.map(defaultSets, function(key, value) {
+    if (!sets[key]) {
+      sets[key] = value;
     }
-  };
-}
+  });
+} catch (e) {}
 
 fis.cli.version = require('./version.js');
 
@@ -42,7 +47,7 @@ var matchRules = {
       // options...
     })
   },
-  '*.tpl': {
+  '/(**.tpl)': {
     preprocessor: fis.plugin('extlang'),
     optimizer: [
       fis.plugin('smarty-xss'),
@@ -52,7 +57,7 @@ var matchRules = {
       isPage: true
     },
     useMap: true,
-    release: '/${namespace}/$1'
+    release: '/${template}/${namespace}/$1'
   },
   '*.{tpl,js,ejs,scss,css}': {
     useSameNameRequire: true
@@ -61,12 +66,13 @@ var matchRules = {
 
   // widget
   '/(widget/**).tpl': {
-    release: '${namespace}/$1',
+    url: '${namespace}/$1',
+    release: '/${template}/${namespace}/$1',
     useMap: true
   },
-  '/widget/{*.{js,scss,less,css},**/*.{js,scss,less,css}}': {
+  '/widget/{*.{js,scss,ejs,less,css},**/*.{js,scss,ejs,less,css}}': {
     isMod: true,
-    release: '${namespace}/widget/$1'
+    release: '/${static}/$0'
   },
   '/{plugin/**.*,smarty.conf,domain.conf,**.php}': {
     release: '$0'
@@ -81,6 +87,7 @@ var matchRules = {
   },
   '/mods/**.ejs': {
     rExt: '.js',
+    isJsLike: true,
     isMod: true,
     parser: require('./plugins/parser/ejs')
   },
@@ -126,9 +133,9 @@ fis.set('project.ignore', [
 ]);
 
 
-fis.util.map(['domain'], function (i, v) {
+fis.util.map(['domain'], function(i, v) {
   if (sets[v]) {
-    fis.util.map(sets[v], function (s, rule) {
+    fis.util.map(sets[v], function(s, rule) {
       fis.match(s, {
         domain: rule
       })
@@ -138,7 +145,7 @@ fis.util.map(['domain'], function (i, v) {
 });
 
 if (sets.deploy) {
-  fis.util.map(sets.deploy, function (s, r) {
+  fis.util.map(sets.deploy, function(s, r) {
     fis.match(s, {
       deploy: fis.plugin('http-push', r)
     })
@@ -146,13 +153,13 @@ if (sets.deploy) {
   delete sets.deploy;
 }
 
-fis.util.map(sets, function (key, value) {
+fis.util.map(sets, function(key, value) {
   fis.set(key, value);
 });
 
 
 
-fis.util.map(matchRules, function (selector, rules) {
+fis.util.map(matchRules, function(selector, rules) {
   fis.match(selector, rules);
 });
 
