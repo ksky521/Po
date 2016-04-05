@@ -12,7 +12,6 @@
     "lodash": "~4.6.1",
     "fis3": "3.3.21",
     "fis-parser-es6": "0.0.1",
-    "fis-parser-sass": "0.3.16",
     "fis3-server-smarty": "0.0.4",
     "fis-optimizer-uglify-js": "0.1.14",
     "fis-optimizer-clean-css": "0.0.12",
@@ -30,5 +29,7 @@
     "ejs": "2.4.1",
     "fis-parser-ejs": "0.0.1"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "fis-parser-node-sass": "^0.1.9"
+  }
 }
