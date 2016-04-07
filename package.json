@@ -1,6 +1,6 @@
 {
   "name": "fis-po",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "author": "ksky521 <ksky521@gmail.com>",
   "main": "index.js",
@@ -30,6 +30,7 @@
     "fis-parser-ejs": "0.0.1"
   },
   "devDependencies": {
-    "fis-parser-node-sass": "^0.1.9"
+    "fis-parser-node-sass": "^0.1.9",
+    "fis3-hook-commonjsx": "^0.1.0"
   }
 }

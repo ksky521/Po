@@ -59,10 +59,17 @@ var matchRules = {
     useMap: true,
     release: '/${template}/${namespace}/$1'
   },
-  '*.{tpl,js,ejs,scss,css}': {
+  '*.{tpl,js,ejs,scss,css,less}': {
     useSameNameRequire: true
   },
-
+  '*.{js,ejs,scss,css,less}': {
+    useSameNameRequire: true,
+    postprocessor: function(content, file) {
+      file.extras.hash = file.getHash();
+      // console.log(file.extras, file.getHash());
+      return content;
+    }
+  },
 
   // widget
   '/(widget/**).tpl': {
@@ -187,7 +194,7 @@ fis
   .match('*.sh', {
     release: false
   })
-  .match('*.js', {
+  .match('*.{js,ejs}', {
     optimizer: fis.plugin('uglify-js')
   })
   .match('*.{css,less,scss}', {
@@ -220,13 +227,17 @@ fis.media('dev')
 
 
 // 模块化支持
-fis.hook('commonjs');
+fis.hook('commonjsx', {
+  withHash: true
+});
 
 //添加插件
 
 // map.json
 fis.match('::package', {
-  postpackager: [require('./plugins/postpackager/map'), fis.plugin('loader', {})]
+  postpackager: [require('./plugins/postpackager/map'), fis.plugin('loader', {
+    allInOne: true
+  })]
 });
 //alias
 Object.defineProperty(global, 'po', {
